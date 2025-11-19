@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:football_shop_mobile/widgets/left_drawer.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:football_shop_mobile/screens/menu.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -38,7 +42,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
   bool _isValidUrl(String url) {
     try {
       final uri = Uri.parse(url);
-      return (uri.hasScheme && (uri.scheme == 'http' || uri.scheme == 'https')) && uri.host.isNotEmpty;
+      return (uri.hasScheme &&
+              (uri.scheme == 'http' || uri.scheme == 'https')) &&
+          uri.host.isNotEmpty;
     } catch (e) {
       return false;
     }
@@ -112,8 +118,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Form Tambah Produk'), backgroundColor: Colors.indigo),
+      appBar: AppBar(
+        title: const Text('Form Tambah Produk'),
+        backgroundColor: Colors.indigo,
+      ),
       drawer: const LeftDrawer(),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
@@ -126,7 +136,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 controller: _nameController,
                 decoration: InputDecoration(
                   labelText: 'Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 validator: (value) {
                   final v = value?.trim() ?? '';
@@ -144,10 +156,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: InputDecoration(
                   labelText: 'Price',
                   hintText: 'Masukkan harga (angka, contoh: 120000)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
+                ],
                 validator: (value) {
                   final v = value?.trim() ?? '';
                   if (v.isEmpty) return 'Price tidak boleh kosong';
@@ -167,7 +185,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 maxLines: 8,
                 decoration: InputDecoration(
                   labelText: 'Description',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 validator: (value) {
                   final v = value?.trim() ?? '';
@@ -185,13 +205,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: InputDecoration(
                   labelText: 'Thumbnail URL',
                   hintText: 'https://example.com/image.jpg',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 keyboardType: TextInputType.url,
                 validator: (value) {
                   final v = value?.trim() ?? '';
                   if (v.isEmpty) return 'Thumbnail tidak boleh kosong';
-                  if (!_isValidUrl(v)) return 'Thumbnail harus berupa URL valid (http/https)';
+                  if (!_isValidUrl(v))
+                    return 'Thumbnail harus berupa URL valid (http/https)';
                   return null;
                 },
               ),
@@ -202,7 +225,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 controller: _categoryController,
                 decoration: InputDecoration(
                   labelText: 'Category',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 validator: (value) {
                   final v = value?.trim() ?? '';
@@ -228,7 +253,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 decoration: InputDecoration(
                   labelText: 'Stock',
                   hintText: 'Jumlah stok (contoh: 10)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -236,7 +263,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   final v = value?.trim() ?? '';
                   if (v.isEmpty) return 'Stock tidak boleh kosong';
                   final parsed = int.tryParse(v);
-                  if (parsed == null) return 'Stock harus berupa bilangan bulat';
+                  if (parsed == null)
+                    return 'Stock harus berupa bilangan bulat';
                   if (parsed < 0) return 'Stock tidak boleh negatif';
                   if (parsed > 10000000) return 'Stock terlalu besar';
                   return null;
@@ -249,7 +277,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 controller: _brandController,
                 decoration: InputDecoration(
                   labelText: 'Brand',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.0)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(6.0),
+                  ),
                 ),
                 validator: (value) {
                   final v = value?.trim() ?? '';
@@ -264,8 +294,64 @@ class _ProductFormPageState extends State<ProductFormPage> {
               SizedBox(
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _handleSave,
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      // TODO: Replace the URL with your app's URL
+                      // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
+                      // If you using chrome,  use URL http://localhost:8000
+                      final String name = _nameController.text.trim();
+                      final String priceText = _priceController.text.trim();
+                      final String description = _descriptionController.text
+                          .trim();
+                      final String thumbnail = _thumbnailController.text.trim();
+                      final String category = _categoryController.text.trim();
+                      final String brand = _brandController.text.trim();
+                      final String stockText = _stockController.text.trim();
+                      final bool isFeatured = _isFeatured;
+
+                      final String url =
+                          "http://localhost:8000/create-flutter/";
+
+                      final response = await request.postJson(
+                        url,
+                        jsonEncode({
+                          "name": name,
+                          "price": priceText,
+                          "description": description,
+                          "thumbnail": thumbnail,
+                          "category": category,
+                          "is_featured": isFeatured,
+                          "stock": stockText,
+                          "brand": brand,
+                        }),
+                      );
+
+                      if (context.mounted) {
+                        if (response['status'] == 'success') {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("News successfully saved!"),
+                            ),
+                          );
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => HomePage()),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                "Something went wrong, please try again.",
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo,
+                  ),
                   child: const Text('Save', style: TextStyle(fontSize: 16)),
                 ),
               ),

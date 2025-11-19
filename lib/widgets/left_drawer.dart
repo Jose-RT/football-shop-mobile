@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:football_shop_mobile/screens/menu.dart';
+import 'package:football_shop_mobile/screens/product_entry_list.dart';
 import 'package:football_shop_mobile/screens/product_form_page.dart';
 
 class LeftDrawer extends StatelessWidget {
@@ -41,6 +42,16 @@ class LeftDrawer extends StatelessWidget {
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const ProductFormPage()),
+                            );
+                        },
+                    ),
+                    ListTile(
+                        leading: const Icon(Icons.add_reaction_rounded),
+                        title: const Text('Product List'),
+                        onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ProductEntryList()),
                             );
                         },
                     ),

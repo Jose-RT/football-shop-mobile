@@ -1,54 +1,101 @@
 import 'package:flutter/material.dart';
-import 'package:football_shop_mobile/screens/product_form_page.dart';
+import 'package:football_shop_mobile/screens/product_form.dart';
+import 'package:football_shop_mobile/screens/product_entry_list.dart';
+import 'package:football_shop_mobile/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
-class ProductItem {
-    final String title;
-    final String category;
-    final String thumbnail;
-    final bool isFeatured;
-
-    ProductItem({required this.title, required this.category, this.thumbnail = '', this.isFeatured = false});
+class ItemHomepage {
+  final String name;
+  final IconData icon;
+  const ItemHomepage(this.name, this.icon);
 }
 
-class ProductCard extends StatelessWidget {
-final ProductItem item;
-const ProductCard({super.key, required this.item});
+class ItemCard extends StatelessWidget {
+  // Menampilkan kartu dengan ikon dan nama.
 
+  final ItemHomepage item;
+  final VoidCallback? onTap;
+  const ItemCard(this.item, {this.onTap, super.key});
 
-    @override
-    Widget build(BuildContext context) {
-        return Card(
-            child: InkWell(
-                onTap: () {
-                    ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(content: Text("Kamu telah menekan: ${item.title}")));
-                },
-                child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                        children: [
-                            if (item.thumbnail.isNotEmpty)
-                                Image.network(item.thumbnail, width: 80, height: 80, fit: BoxFit.cover)
-                            else
-                                Container(width: 80, height: 80, color: Colors.grey[300], child: const Icon(Icons.image, size: 40)),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                        Text(item.title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 6),
-                                        Text(item.category),
-                                        if (item.isFeatured) const SizedBox(height: 6),
-                                        if (item.isFeatured) const Chip(label: Text('Unggulan')),
-                                    ],
-                                ),
-                            )
-                        ],
-                    ),
+  @override
+  Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    return Material(
+      // Menentukan warna latar belakang dari tema aplikasi.
+      color: Theme.of(context).colorScheme.secondary,
+      // Membuat sudut kartu melengkung.
+      borderRadius: BorderRadius.circular(12),
+
+      child: InkWell(
+        // Aksi ketika kartu ditekan.
+        onTap: () async {
+          // Menampilkan pesan SnackBar saat kartu ditekan.
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text("Kamu telah menekan tombol ${item.name}!"),
+              ),
+            );
+
+          if (item.name == "Lihat Products") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProductFormPage()),
+            );
+          } else if (item.name == "See Products List") {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ProductEntryList()),
+            );
+          } else if (item.name == "Logout") {
+            // TODO: Replace the URL with your app's URL and don't forget to add a trailing slash (/)!
+            // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
+            // If you using chrome,  use URL http://localhost:8000
+
+            final response = await request.logout(
+              "http://http://localhost:8000/auth/logout/",
+            );
+            String message = response["message"];
+            if (context.mounted) {
+              if (response['status']) {
+                String uname = response["username"];
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("$message See you again, $uname.")),
+                );
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              } else {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(message)));
+              }
+            }
+          }
+        },
+        // Container untuk menyimpan Icon dan Text
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Center(
+            child: Column(
+              // Menyusun ikon dan teks di tengah kartu.
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(item.icon, color: Colors.white, size: 30.0),
+                const Padding(padding: EdgeInsets.all(3)),
+                Text(
+                  item.name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
                 ),
+              ],
             ),
-        );
-    }
+          ),
+        ),
+      ),
+    );
+  }
 }

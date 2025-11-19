@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:football_shop_mobile/screens/login.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 void main() => runApp(const FootballShopApp());
 
@@ -8,13 +11,19 @@ class FootballShopApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Football Shop',
-      theme: ThemeData(
-        useMaterial3: true,
-        primarySwatch: Colors.blue,
+    return Provider(
+      create: (_) {
+        CookieRequest request = CookieRequest();
+        return request;
+      },
+      child: MaterialApp(
+        title: 'Football Shop',
+        theme: ThemeData(
+          useMaterial3: true,
+          primarySwatch: Colors.red,
+        ),
+      home: const LoginPage(),
       ),
-      home: const HomePage(),
     );
   }
 }
@@ -49,7 +58,7 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.list),
               label: const Text('All Products'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue, // biru
+                backgroundColor: Colors.green, // biru
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 textStyle: const TextStyle(fontSize: 16),
               ),
@@ -61,7 +70,7 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.person),
               label: const Text('My Products'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green, // hijau
+                backgroundColor: Colors.red, // hijau
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 textStyle: const TextStyle(fontSize: 16),
               ),
@@ -78,7 +87,7 @@ class HomePage extends StatelessWidget {
               icon: const Icon(Icons.add),
               label: const Text('Create Product'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red, // merah
+                backgroundColor: Colors.blue, // merah
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 textStyle: const TextStyle(fontSize: 16),
               ),
